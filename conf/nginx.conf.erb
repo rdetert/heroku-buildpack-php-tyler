@@ -78,25 +78,35 @@ http {
       access_log   off;
     }
 
-    #location / {
-    #  # wordpress fancy rewrites
-    #  if (-f $request_filename) {
-    #    break;
-    #  }
-    #  if (-d $request_filename) {
-    #    break;
-    #  }
-
-    #  rewrite         ^(.+)$ /index.php?q=$1 last;
-
-    #  # Add trailing slash to */wp-admin requests.
-    #  rewrite         /wp-admin$ $scheme://$host$uri/ permanent;
-
-    #  # redirect to feedburner.
-    #  # if ($http_user_agent !~ FeedBurner) {
-    #  #   rewrite ^/feed/?$ http://feeds.feedburner.com/feedburner-feed-id last;
-    #  # }
-    #}
+    location = / {
+            index index.php;
+    }
+     
+    location / {
+            if (!-f $request_filename){
+                    rewrite ^/([a-zA-Z0-9-]+)$ /$1.php last;
+            }
+    }
+     
+    location /l/ {
+            rewrite ^/l/([a-zA-Z0-9/]+)$ /l.php?i=$1 last;
+    }
+     
+    location /t/ {
+            rewrite ^/t/([a-zA-Z0-9/]+)$ /t.php?i=$1 last;
+    }
+     
+    location /w/ {
+            rewrite ^/w/([a-zA-Z0-9/]+)$ /w.php?i=$1 last;
+    }
+     
+    location /unsubscribe/ {
+            rewrite ^/unsubscribe/(.*)$ /unsubscribe.php?i=$1 last;
+    }
+     
+    location /subscribe/ {
+            rewrite ^/subscribe/(.*)$ /subscribe.php?i=$1 last;
+    }
 
     include /app/conf/nginx.d/*.conf;
 
@@ -107,6 +117,16 @@ http {
       fastcgi_param   HTTPS $my_https if_not_empty;
       fastcgi_pass    php_fpm;
       fastcgi_param   SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+
+    location ~ \.php {
+ 
+        fastcgi_index index.php;
+        include         /app/vendor/nginx/conf/fastcgi_params;
+        keepalive_timeout 0;
+        fastcgi_param   HTTPS $my_https if_not_empty;
+        fastcgi_pass    php_fpm;
+        fastcgi_param   SCRIPT_FILENAME $document_root$fastcgi_script_name;
     }
   }
 }
